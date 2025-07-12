@@ -1,12 +1,10 @@
-// src/App.tsx
 import { useEffect, useRef } from "react";
 
-import type { ChatMessage as ChatMessageType } from "./types"; // Import the type for the dummy data
-import "./index.css"; // Ensure Tailwind CSS is imported
+import type { ChatMessage as ChatMessageType } from "./types";
+import "./index.css";
 import ChatMessage from "./components/chat-message";
 
 // --- Dummy Data for UI Preview ---
-// This data directly matches the structure needed by ChatMessage
 const DUMMY_MESSAGES: ChatMessageType[] = [
   {
     id: "dummy-1",
@@ -60,29 +58,46 @@ const DUMMY_MESSAGES: ChatMessageType[] = [
 // -------------------------------------------
 
 function App() {
-  // Ref for auto-scrolling (optional for static data, but shows the scroll behavior)
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Effect to scroll to the bottom on initial render
   useEffect(() => {
     const timer = setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100); // Small delay to ensure rendering happens first
-    return () => clearTimeout(timer); // Clean up timer
-  }, []); // Empty dependency array means this runs only once
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Sort dummy messages by timestamp for correct display order
+  // 📨 Send dummy transcript to Cloudflare Worker
+  useEffect(() => {
+    const sendTranscriptToWorker = async () => {
+      const transcript = DUMMY_MESSAGES.map((msg) => `[${msg.sender}]: ${msg.text}`).join("\n");
+
+      try {
+        const response = await fetch("https://vapi-audio-relay.YOUR_SUBDOMAIN.workers.dev/transcript", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ transcript }),
+        });
+
+        const data = await response.json();
+        console.log("✅ Worker response:", data);
+      } catch (err) {
+        console.error("❌ Error sending transcript to worker:", err);
+      }
+    };
+
+    sendTranscriptToWorker();
+  }, []);
+
   const sortedDummyMessages = [...DUMMY_MESSAGES].sort(
     (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   return (
-    // Main container for the page layout
     <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
-      {/* Chat Box Container */}
-      {/* Responsive height calc(100vh - margin) */}
       <div className="w-full max-w-8/12 bg-white rounded-lg shadow-xl flex flex-col h-[calc(100vh-2rem)] md:h-[calc(100vh-4rem)]">
-        {/* Header */}
         <div className="p-4 bg-indigo-600 text-white rounded-t-lg flex justify-between items-center">
           <h1 className="text-lg md:text-xl font-semibold">
             Transcription Chat Preview
@@ -92,28 +107,19 @@ function App() {
           </span>
         </div>
 
-        {/* Messages Display Area */}
-        {/* flex-1: takes remaining vertical space */}
-        {/* overflow-y-auto: enables vertical scrolling */}
-        {/* custom-scrollbar: applies our custom scrollbar styles */}
-        {/* flex flex-col: stacks message bubbles vertically */}
         <div className="flex-1 px-4 py-2 overflow-y-auto custom-scrollbar flex flex-col">
           {sortedDummyMessages.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-gray-500">
               <p>No dummy messages to display.</p>
             </div>
           ) : (
-            // Map over the sorted dummy data
             sortedDummyMessages.map((message) => (
-              // Pass each message object as a prop to ChatMessage
               <ChatMessage key={message.id} message={message} />
             ))
           )}
-          {/* Empty div to scroll into view */}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Footer */}
         <div className="p-2 bg-gray-200 rounded-b-lg text-center text-xs text-gray-600">
           Displaying UI for chat with Xolero AI in speechbolt
         </div>
