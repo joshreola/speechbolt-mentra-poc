@@ -67,28 +67,116 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 📨 Send dummy transcript to Cloudflare Worker
+  // 📨 Send dummy transcripts to Cloudflare Worker in proper Vapi format
   useEffect(() => {
-    const sendTranscriptToWorker = async () => {
-      const transcript = DUMMY_MESSAGES.map((msg) => `[${msg.sender}]: ${msg.text}`).join("\n");
-
+    const sendTranscriptsToWorker = async () => {
+      console.log('🚀 Starting to send dummy messages to Vapi Worker...');
+      
+      // Send conversation start event
       try {
-        const response = await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
+        await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ transcript }),
+          body: JSON.stringify({
+            type: "conversation-started",
+            timestamp: new Date().toISOString()
+          }),
         });
-
-        const data = await response.json();
-        console.log("✅ Worker response:", data);
+        console.log('✅ Sent conversation-started event');
       } catch (err) {
-        console.error("❌ Error sending transcript to worker:", err);
+        console.error("❌ Error sending conversation-started:", err);
+      }
+
+      // Wait 2 seconds before starting messages
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Send each message as separate transcript events
+      for (let i = 0; i < DUMMY_MESSAGES.length; i++) {
+        const msg = DUMMY_MESSAGES[i];
+        
+        try {
+          // Send speech-started event for more realism
+          await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "speech-started",
+              timestamp: new Date().toISOString()
+            }),
+          });
+
+          // Wait a moment
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Send the actual transcript
+          const response = await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "transcript",
+              transcript: msg.text,
+              speaker: msg.sender === "caller" ? "user" : "assistant",
+              confidence: Math.random() * 0.2 + 0.8, // Random confidence between 0.8-1.0
+              timestamp: msg.timestamp,
+              isFinal: true
+            }),
+          });
+
+          if (response.ok) {
+            console.log(`✅ Sent message ${i + 1}/${DUMMY_MESSAGES.length}: ${msg.text.substring(0, 30)}...`);
+          } else {
+            console.error(`❌ Failed to send message ${i + 1}:`, response.status);
+          }
+
+          // Send speech-ended event
+          await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              type: "speech-ended",
+              timestamp: new Date().toISOString()
+            }),
+          });
+          
+          // Wait between messages to simulate real conversation
+          const delay = Math.random() * 2000 + 1000; // Random delay 1-3 seconds
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+        } catch (err) {
+          console.error(`❌ Error sending message ${i + 1}:`, err);
+        }
+      }
+
+      // Send conversation end event
+      try {
+        await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: "conversation-ended",
+            timestamp: new Date().toISOString()
+          }),
+        });
+        console.log('✅ Sent conversation-ended event');
+        console.log('🎉 All dummy messages sent successfully!');
+      } catch (err) {
+        console.error("❌ Error sending conversation-ended:", err);
       }
     };
 
-    sendTranscriptToWorker();
+    // Start sending messages after 3 seconds (give time for page to load)
+    const timer = setTimeout(sendTranscriptsToWorker, 3000);
+    return () => clearTimeout(timer);
   }, []);
 
   const sortedDummyMessages = [...DUMMY_MESSAGES].sort(
@@ -103,7 +191,7 @@ function App() {
             Transcription Chat Preview
           </h1>
           <span className="text-sm font-medium text-yellow-300">
-            Status: Dummy Data
+            Status: Sending to Vapi Worker
           </span>
         </div>
 
@@ -121,7 +209,19 @@ function App() {
         </div>
 
         <div className="p-2 bg-gray-200 rounded-b-lg text-center text-xs text-gray-600">
-          Displaying UI for chat with Xolero AI in speechbolt
+          Sending dummy chat data to Vapi Worker → MentraOS Glasses
+        </div>
+
+        <div className="p-3 bg-blue-50 border-t">
+          <div className="text-xs text-blue-800">
+            <strong>📡 Pipeline Status:</strong>
+            <div className="mt-1">
+              React App → Cloudflare Worker → MentraOS Glasses
+            </div>
+            <div className="mt-1 text-blue-600">
+              Check browser console for sending status and your glasses for messages!
+            </div>
+          </div>
         </div>
       </div>
     </div>
