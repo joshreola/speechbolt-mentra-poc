@@ -131,6 +131,7 @@ export const useSignalR = ({
               },
             ]);
             break;
+          case CALL_CONNECT_EVENT:
           case CALL_DISCONNECT_EVENT:
             setMessages([]);
             break;
