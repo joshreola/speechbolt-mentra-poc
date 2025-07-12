@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+/* src/index.css */
+
+/* Apply box-sizing border-box to all elements for easier layout calculations */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin and padding from body and html */
+body {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5; /* Improve readability */
+  -webkit-font-smoothing: antialiased; /* Improve font rendering on macOS */
+  -moz-osx-font-smoothing: grayscale; /* Improve font rendering on Firefox */
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* Optional: Set a default system font */
+}
+
+/* Ensure html and body take up at least the full viewport height */
+html,
+body {
+  height: 100%;
+  width: 100%;
+}
+
+/* Ensure the root element created by Vite/React takes full height */
+#root {
+  height: 100%;
+  width: 100%;
+  /* Often you might want flex or grid here if root controls the main layout */
+}
