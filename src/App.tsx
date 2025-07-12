@@ -73,7 +73,7 @@ function App() {
       const transcript = DUMMY_MESSAGES.map((msg) => `[${msg.sender}]: ${msg.text}`).join("\n");
 
       try {
-        const response = await fetch("https://vapi-audio-relay.YOUR_SUBDOMAIN.workers.dev/transcript", {
+        const response = await fetch("https://vapi-audio-relay.companies-josh-reola.workers.dev/transcript", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
