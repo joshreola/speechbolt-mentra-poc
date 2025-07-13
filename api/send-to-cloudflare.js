@@ -1,8 +1,3 @@
-// pages/api/send-to-cloudflare.js
-// API endpoint for your Vercel app to send data to Cloudflare Worker
-
-
-
 export default async function handler(req, res) {
   // Enable CORS for frontend requests
   res.setHeader('Access-Control-Allow-Origin', '*');
